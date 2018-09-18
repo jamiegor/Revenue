@@ -17,8 +17,8 @@ def df_for_forecast(df, column):
 
 
 
-def fitandforecast(df, col, mode='multiplicative', periods=18, freq='M',fourier=10,
-                  season_prior=10.0):
+def fitandforecast(df, col, mode='multiplicative', periods=18, freq='MS',fourier=10,
+                  season_prior=10.0, interval_width=0.8):
     """
     Accepts:
         df   - dataframe indexed by datetime (pd.datetime format)
@@ -34,16 +34,17 @@ def fitandforecast(df, col, mode='multiplicative', periods=18, freq='M',fourier=
         seasonality_prior_scale - ...
     """
     ts = Prophet(seasonality_mode=mode, yearly_seasonality=fourier,
-                seasonality_prior_scale=season_prior)
+                seasonality_prior_scale=season_prior, interval_width=interval_width)
+    # interval_width ~ uncertainty interval
     # ts = Prophet(seasonality_mode=mode)
     # m.add_seasonality(
     # name='weekly', period=, fourier_order=fourier, prior_scale=season_prior)
     ts.fit(df_for_forecast(df, col))
-    future = ts.make_future_dataframe(periods=18, freq='M')
+    future = ts.make_future_dataframe(periods=periods, freq=freq)
     forecast = ts.predict(future)
     return ts, forecast
 
-def seasoncompare(seriess):
+def seasoncompare(seriess, names=None):
     """Plot the yearly seasonalities of a list of ts objects on a common axis"""
     fig = plt.figure(figsize=(10,6))
     ax = fig.add_subplot(111)
@@ -53,9 +54,12 @@ def seasoncompare(seriess):
     clr = ['b', 'g', 'r', 'c', 'm', 'k', 'y', 'k', 'k', 'k', 'k', 'k']
     for i in range(len(seriess)):
         ax.get_lines()[i].set_color(clr[i])
-        ax.get_lines()[i].set_label(str(i+1))
+        if names == None:
+            ax.get_lines()[i].set_label(str(i+1))
+        else:
+            ax.get_lines()[i].set_label(names[i])
 
-    plt.legend()
+    plt.legend(bbox_to_anchor=(1.04,1), loc="upper left")
     ## plt.legend([str[k] for k in range(len(seriess))]) #, bbox_to_anchor=(1.04,1), loc="upper left")
 
 
